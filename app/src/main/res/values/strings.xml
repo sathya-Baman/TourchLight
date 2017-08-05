@@ -5,6 +5,9 @@
     <string name="action_settings">Settings</string>
     <string name="turnon">ON</string>
     <string name="turnoff">OFF</string>
+    <string name="tourch_permission">Need access to flash</string>
+    <string name="permlab_flashlight">Need access to flash</string>
+
     <string name="ad_unit_id">ca-app-pub-7067806065281199/3886912661</string>
 
     /* Real IDS
