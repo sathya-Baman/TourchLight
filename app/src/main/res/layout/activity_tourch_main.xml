@@ -15,9 +15,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/im_btn_greendark"
-        android:src="@drawable/greendark2"
+        android:src="@drawable/btn_switch_on"
         android:background="@null"
         android:onClick="lightsOff"
+        android:visibility="gone"
         android:baselineAlignBottom="false"
         android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
@@ -32,7 +33,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:background="@null"
-        android:src="@drawable/green2" />
+        android:src="@drawable/btn_switch_off" />
 
     <com.google.android.gms.ads.doubleclick.PublisherAdView
         android:id="@+id/ad_view"

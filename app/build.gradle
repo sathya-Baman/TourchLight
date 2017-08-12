@@ -2,14 +2,14 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion "24"
+    buildToolsVersion '25.0.0'
 
     defaultConfig {
         applicationId "lk.lankahomes.baman.tourchlight"
         minSdkVersion 15
         targetSdkVersion 24
-        versionCode 1
-        versionName "1.0"
+        versionCode 4
+        versionName "1.4.17.08.11"
     }
     buildTypes {
         release {
