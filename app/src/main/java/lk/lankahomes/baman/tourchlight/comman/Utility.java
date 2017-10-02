@@ -30,8 +30,7 @@ public class Utility {
         SharedPreferences prefs = ctx.getSharedPreferences("torch_shared_preferences", ctx.MODE_PRIVATE);
         return prefs.getString(key, "no_data");
     }
-
-
+    
     public boolean isNetworkAvailable(Context Ctx) {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) Ctx.getSystemService(Ctx.CONNECTIVITY_SERVICE);

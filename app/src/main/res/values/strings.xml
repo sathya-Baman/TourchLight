@@ -7,14 +7,9 @@
     <string name="turnoff">OFF</string>
     <string name="tourch_permission">Need access to flash</string>
     <string name="permlab_flashlight">Need access to flash</string>
+    <string name="torch_blink_service">Torch Blink Service</string>
 
     <string name="ad_unit_id">ca-app-pub-7067806065281199/3886912661</string>
 
-    /* Real IDS
 
-    App ID: ca-app-pub-7067806065281199~9933446268
-    Ad unit ID: ca-app-pub-7067806065281199/3886912661
-
-
-    */
 </resources>

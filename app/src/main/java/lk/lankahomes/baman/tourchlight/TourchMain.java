@@ -1,10 +1,16 @@
 package lk.lankahomes.baman.tourchlight;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -12,7 +18,9 @@ import android.view.View;
 import android.hardware.Camera;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -23,17 +31,22 @@ import java.util.TimeZone;
 
 import lk.lankahomes.baman.tourchlight.comman.RequestExternalResouce;
 import lk.lankahomes.baman.tourchlight.comman.Utility;
+import lk.lankahomes.baman.tourchlight.service.TorchBlinkService;
 
 public class TourchMain extends Activity {
     public Context context;
     static Camera mCam;
-    Boolean clickOn = false;
+    public Boolean isBlink = false;
+    public Boolean isLightON = true;
+    public Intent mServiceIntent;
+
+    TorchBlinkService mService;
+    boolean mBound = false;
+
+
     private static final int CAMERA_PERMISSIONS_REQUEST = 1;
-
-
-    public  ImageButton img_on;
-    public  ImageButton img_off;
-
+    public  ImageButton image_button_Switch;
+    public  Switch blink_switch;
     public String country_code = "";
     public String country_name = "";
     public String city = "";
@@ -45,12 +58,13 @@ public class TourchMain extends Activity {
     public String remarks = "no_remarks";
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tourch_main);
         context= getApplicationContext();
+
+        mServiceIntent  = new Intent(context, TorchBlinkService.class);
 
         if(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)){
             Toast.makeText(getBaseContext(), "Your phone has a Flash", Toast.LENGTH_SHORT).show();
@@ -60,53 +74,81 @@ public class TourchMain extends Activity {
 
         checkCameraPermission();
 
-        img_on = (ImageButton) findViewById(R.id.im_btn_green_light);
-        img_off = (ImageButton) findViewById(R.id.im_btn_greendark);
+        blink_switch = (Switch) findViewById(R.id.sw_blink);
+        image_button_Switch = (ImageButton) findViewById(R.id.img_button_light_switch);
 
+        blink_switch.setChecked(false);
+        blink_switch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    isBlink = (isChecked) ? true : false;
+                }
+        });
         putUserLog();
 
-    }
-
-    public void lightsOn(View v){
-        clickOn = true;
-        processCamera();
-    }
-    public void lightsOff(View v){
-        clickOn = false;
-        processCamera();
+        Manupulate_switch(null);
     }
 
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Bind to LocalService
+        Intent intent = new Intent(this, TorchBlinkService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
 
-    private void processCamera(){
-        try{
-            if(clickOn == true) {
-                mCam = Camera.open();
-                Camera.Parameters p = mCam.getParameters();
-                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-                mCam.setParameters(p);
-                SurfaceTexture mPreviewTexture = new SurfaceTexture(0);
-                try {
-                    mCam.setPreviewTexture(mPreviewTexture);
-                } catch (IOException ex) {
-                    // Ignore
-                }
-                mCam.startPreview();
-
-                img_on.setVisibility(View.GONE);
-                img_off.setVisibility(View.VISIBLE);
-
-            } else {
-                mCam.release();
-                img_on.setVisibility(View.VISIBLE);
-                img_off.setVisibility(View.GONE);
-            }
-        } catch(Exception e) {
-            Log.e("Error", ""+e);
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Unbind from the service
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
         }
     }
 
+    public void Manupulate_switch(View v){
+        isLightON = (isLightON) ? false : true;
+        processCamera();
+    }
 
+    private void processCamera(){
+        try{
+            if(isLightON == true ) {
+                    if(isBlink) {
+                        if (mBound) {
+                            mService.startFlash();
+                        }
+                    } else {
+                        mCam = Camera.open();
+                        Camera.Parameters p = mCam.getParameters();
+                        p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                        mCam.setParameters(p);
+                        SurfaceTexture mPreviewTexture = new SurfaceTexture(0);
+                        try {
+                            mCam.setPreviewTexture(mPreviewTexture);
+                        } catch (IOException ex) {
+                            // Ignore
+                        }
+                        mCam.startPreview();
+                        image_button_Switch.setImageResource(R.drawable.btn_switch_on);
+                    }
+            } else if(isLightON == false){
+                if(isBlink) {
+                    SharedPreferences sp = getSharedPreferences("torchfile", MODE_PRIVATE);
+                    SharedPreferences.Editor ed = sp.edit();
+                    ed.putBoolean("is_torchon", true);
+                    ed.commit();
+                    image_button_Switch.setImageResource(R.drawable.btn_switch_off);
+                    mCam.release();
+                } else {
+                    image_button_Switch.setImageResource(R.drawable.btn_switch_off);
+                    mCam.release();
+                }
+            }
+        } catch(Exception e) { Log.e("Error", ""+e);  }
+    }
 
     public void checkCameraPermission(){
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -115,6 +157,22 @@ public class TourchMain extends Activity {
             }
     }
 
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            TorchBlinkService.LocalBinder binder = (TorchBlinkService.LocalBinder) service;
+            mService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
 
 
     @Override
@@ -146,10 +204,8 @@ public class TourchMain extends Activity {
                             longitude = response.getString("longitude").toString();
                             IPv4 = response.getString("IPv4").toString();
                             state = response.getString("state").toString();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    getDeviceDetails();
+                        } catch (JSONException e) { e.printStackTrace(); }
+                        getDeviceDetails();
                     }
 
                 @Override
@@ -164,7 +220,6 @@ public class TourchMain extends Activity {
     public void  getDeviceDetails(){
         if(new Utility().isNetworkAvailable(context)){
             try {
-
                 String time_zone = TimeZone.getDefault().getDisplayName().toString();
                 String versionRelease = android.os.Build.VERSION.RELEASE; // e.g. myVersion := "1.6"
                 String version = String.valueOf(android.os.Build.VERSION.SDK_INT);
@@ -188,14 +243,10 @@ public class TourchMain extends Activity {
                 requestBody.put("name", deviceName);
                 requestBody.put("remarks", remarks);
 
-
                 new RequestExternalResouce(context, new Utility().getAddUserLogUrl(), requestBody.toString(), "POST", new RequestExternalResouce.OnTaskDoneListener() {
-
                     @Override
                     public void onTaskDone(String responseData) {
-
                         System.out.println("Success");
-
                     }
 
                     @Override
@@ -203,7 +254,6 @@ public class TourchMain extends Activity {
                         System.out.println("failed");
                     }
                 }).execute();
-
             }catch (Exception e){ e.printStackTrace();}
         }
     }

@@ -12,36 +12,28 @@
 
 
     <ImageButton
+        android:id="@+id/img_button_light_switch"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:id="@+id/im_btn_greendark"
-        android:src="@drawable/btn_switch_on"
-        android:background="@null"
-        android:onClick="lightsOff"
-        android:visibility="gone"
-        android:baselineAlignBottom="false"
-        android:layout_centerVertical="true"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
-
-    <ImageButton
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/im_btn_green_light"
-        android:onClick="lightsOn"
-        android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
         android:background="@null"
-        android:src="@drawable/btn_switch_off" />
+        android:baselineAlignBottom="false"
+        android:onClick="Manupulate_switch"
+        android:src="@drawable/btn_switch_on" />
 
-    <com.google.android.gms.ads.doubleclick.PublisherAdView
-        android:id="@+id/ad_view"
+
+
+    <Switch
+        android:id="@+id/sw_blink"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        ads:adSize="BANNER"
-        ads:adUnitId="@string/ad_unit_id" />
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:text="Blink on/off"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
 
 </RelativeLayout>
