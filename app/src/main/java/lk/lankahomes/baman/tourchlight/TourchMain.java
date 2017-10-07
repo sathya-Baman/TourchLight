@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.SurfaceTexture;
@@ -13,6 +14,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.hardware.Camera;
@@ -98,6 +100,9 @@ public class TourchMain extends Activity {
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
+
+
+
     @Override
     protected void onStop() {
         super.onStop();
@@ -113,12 +118,20 @@ public class TourchMain extends Activity {
         processCamera();
     }
 
+
+
+
+
     private void processCamera(){
         try{
             if(isLightON == true ) {
                     if(isBlink) {
                         if (mBound) {
-                            mService.startFlash();
+                            //mService.startFlash();
+                            LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+                            Intent intent = new Intent("actionOnFlash");
+                            intent.putExtra("MESSAGE", "startFlash");
+                            manager.sendBroadcast(intent);
                         }
                     } else {
                         mCam = Camera.open();
@@ -136,12 +149,14 @@ public class TourchMain extends Activity {
                     }
             } else if(isLightON == false){
                 if(isBlink) {
-                    SharedPreferences sp = getSharedPreferences("torchfile", MODE_PRIVATE);
-                    SharedPreferences.Editor ed = sp.edit();
-                    ed.putBoolean("is_torchon", true);
-                    ed.commit();
-                    image_button_Switch.setImageResource(R.drawable.btn_switch_off);
-                    mCam.release();
+
+                    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+                    Intent intent = new Intent("actionOnFlash");
+                    intent.putExtra("MESSAGE", "startFlash");
+                    manager.sendBroadcast(intent);
+
+//                    image_button_Switch.setImageResource(R.drawable.btn_switch_off);
+//                    mCam.release();
                 } else {
                     image_button_Switch.setImageResource(R.drawable.btn_switch_off);
                     mCam.release();
