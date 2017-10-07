@@ -22,6 +22,7 @@ public class TorchBlinkService  extends Service {
     private final IBinder mBinder = new LocalBinder();
     static Camera mCam;
     private Context mContext;
+    private int flashStartValue = 0;
 
     // Random number generator
     public class LocalBinder extends Binder {
@@ -49,18 +50,31 @@ public class TorchBlinkService  extends Service {
             String msg = intent.getStringExtra("MESSAGE");
             System.out.print("------ Received a Broad cast");
             if (msg == "startFlash"){
-                startFlash();
+                    Thread thread = new Thread(new Runnable(){
+                        @Override
+                        public void run(){
+                            flashStartValue = 1;
+                            startFlash();
+                        }
+                    });
+                    thread.start();
             } else {
-
+                    Thread thread2 = new Thread(new Runnable(){
+                        @Override
+                        public void run(){
+                            flashStartValue = 0;
+                            startFlash();
+                        }
+                    });
+                    thread2.start();
             }
         }
     };
 
     public void startFlash (){
-        int k = 1;
         int i= 0;
         try {
-            while (k > 0) {
+            while (flashStartValue > 0) {
                     mCam = Camera.open();
                     Camera.Parameters p = mCam.getParameters();
                     p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);

@@ -44,7 +44,7 @@ public class TourchMain extends Activity {
 
     TorchBlinkService mService;
     boolean mBound = false;
-
+    public int blinkstatus = 1;
 
     private static final int CAMERA_PERMISSIONS_REQUEST = 1;
     public  ImageButton image_button_Switch;
@@ -84,10 +84,20 @@ public class TourchMain extends Activity {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     isBlink = (isChecked) ? true : false;
+
+                    if(!isBlink){
+                        try {
+                            LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+                            Intent intent = new Intent("actionOnFlash");
+                            image_button_Switch.setImageResource(R.drawable.btn_switch_off);
+                            intent.putExtra("MESSAGE", "stopFlash");
+                            manager.sendBroadcast(intent);
+                            mCam.release();
+                        } catch (Exception e) {e.printStackTrace();}
+                    }
                 }
         });
         putUserLog();
-
         Manupulate_switch(null);
     }
 
@@ -99,9 +109,6 @@ public class TourchMain extends Activity {
         Intent intent = new Intent(this, TorchBlinkService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
-
-
-
 
     @Override
     protected void onStop() {
@@ -119,52 +126,51 @@ public class TourchMain extends Activity {
     }
 
 
-
-
-
     private void processCamera(){
         try{
-            if(isLightON == true ) {
-                    if(isBlink) {
-                        if (mBound) {
-                            //mService.startFlash();
-                            LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-                            Intent intent = new Intent("actionOnFlash");
-                            intent.putExtra("MESSAGE", "startFlash");
-                            manager.sendBroadcast(intent);
-                        }
-                    } else {
-                        mCam = Camera.open();
-                        Camera.Parameters p = mCam.getParameters();
-                        p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
-                        mCam.setParameters(p);
-                        SurfaceTexture mPreviewTexture = new SurfaceTexture(0);
-                        try {
-                            mCam.setPreviewTexture(mPreviewTexture);
-                        } catch (IOException ex) {
-                            // Ignore
-                        }
-                        mCam.startPreview();
-                        image_button_Switch.setImageResource(R.drawable.btn_switch_on);
-                    }
-            } else if(isLightON == false){
-                if(isBlink) {
-
-                    LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
-                    Intent intent = new Intent("actionOnFlash");
-                    intent.putExtra("MESSAGE", "startFlash");
-                    manager.sendBroadcast(intent);
-
-//                    image_button_Switch.setImageResource(R.drawable.btn_switch_off);
-//                    mCam.release();
-                } else {
-                    image_button_Switch.setImageResource(R.drawable.btn_switch_off);
-                    mCam.release();
-                }
+            if(isBlink) {
+                doBlink();
+            } else {
+                doLight();
             }
+
         } catch(Exception e) { Log.e("Error", ""+e);  }
     }
 
+    public  void doBlink(){
+        if (mBound) {
+            LocalBroadcastManager manager = LocalBroadcastManager.getInstance(context);
+            Intent intent = new Intent("actionOnFlash");
+            if (blinkstatus % 2 == 0) {
+                image_button_Switch.setImageResource(R.drawable.btn_switch_off);
+                blinkstatus++;
+                intent.putExtra("MESSAGE", "stopFlash");
+            } else {
+                image_button_Switch.setImageResource(R.drawable.btn_switch_on);
+                blinkstatus++;
+                intent.putExtra("MESSAGE", "startFlash");
+            }
+            manager.sendBroadcast(intent);
+        }
+    }
+
+    public void doLight(){
+        if(isLightON == true ) {
+                mCam = Camera.open();
+                Camera.Parameters p = mCam.getParameters();
+                p.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                mCam.setParameters(p);
+                SurfaceTexture mPreviewTexture = new SurfaceTexture(0);
+                try { mCam.setPreviewTexture(mPreviewTexture);
+                } catch (IOException ex) { ex.printStackTrace();}
+                mCam.startPreview();
+                image_button_Switch.setImageResource(R.drawable.btn_switch_on);
+        } else if(isLightON == false){
+                image_button_Switch.setImageResource(R.drawable.btn_switch_off);
+                mCam.release();
+        }
+
+    }
     public void checkCameraPermission(){
             if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                 if (shouldShowRequestPermissionRationale( Manifest.permission.CAMERA)) { }
