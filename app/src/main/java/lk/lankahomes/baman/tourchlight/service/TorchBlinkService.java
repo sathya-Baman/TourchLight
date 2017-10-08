@@ -92,11 +92,7 @@ public class TorchBlinkService  extends Service {
             }
         } catch (Exception e){ e.printStackTrace(); }
     }
-
-    public void stopflash(){
-
-
-    }
+    
 
 
 
