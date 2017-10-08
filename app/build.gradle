@@ -8,8 +8,8 @@ android {
         applicationId "lk.lankahomes.baman.tourchlight"
         minSdkVersion 15
         targetSdkVersion 24
-        versionCode 4
-        versionName "1.4.17.08.11"
+        versionCode 5
+        versionName "1.5.17.10.08"
     }
     buildTypes {
         release {
